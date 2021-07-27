@@ -1,6 +1,7 @@
 using Basket.API.GrpcServices;
 using Basket.API.Repositories;
 using Discount.Grpc.Protos;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -23,18 +24,35 @@ namespace Basket.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //registered to redix connection
-            services.AddStackExchangeRedisCache(options => {
+            //to register redix connection
+            services.AddStackExchangeRedisCache(options =>
+            {
                 options.Configuration = Configuration.GetValue<string>("CacheSettings:ConnectionString");
             });
+
             //to register IBasketRepository
             services.AddScoped<IBasketRepository, BasketRepository>();
+            //to register auto mapper
+            services.AddAutoMapper(typeof(Startup));
 
             //to register grpc but we need adress information thus we should create the connection configuration
             services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(
-                o => o.Address = new Uri(Configuration["GrpcSettings:DiscountUrl"])) ;
+                o => o.Address = new Uri(Configuration["GrpcSettings:DiscountUrl"]));
 
             services.AddScoped<DiscountGrpcService>();
+
+
+            //to register mass transit connection
+            services.AddMassTransit(config =>
+            {
+                config.UsingRabbitMq((ctx, cfg) =>
+                {
+                    cfg.Host(Configuration["EventBusSettings:HostAddress"]);
+                    // amqp protocol is the queue protocol of Rabbit MQ
+                });
+            });
+            services.AddMassTransitHostedService();
+
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -42,7 +60,7 @@ namespace Basket.API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Basket.API", Version = "v1" });
             });
 
-           
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
