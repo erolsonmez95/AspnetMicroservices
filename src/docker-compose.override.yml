@@ -122,3 +122,16 @@ services:
       - orderdb
       - rabbitmq
 
+
+  ocelotapigw:
+    container_name: ocelotapigw
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - catalog.api
+      - ordering.api
+      - discount.api
+      - basket.api
+    ports:
+      - "8010:80"
+
