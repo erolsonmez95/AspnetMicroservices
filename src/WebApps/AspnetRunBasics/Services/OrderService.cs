@@ -1,12 +1,11 @@
-﻿using Shopping.Aggregator.Extensions;
-using Shopping.Aggregator.Models;
+﻿using AspnetRunBasics.Extensions;
+using AspnetRunBasics.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Shopping.Aggregator.Services
+namespace AspnetRunBasics.Services
 {
     public class OrderService : IOrderService
     {
@@ -19,7 +18,7 @@ namespace Shopping.Aggregator.Services
 
         public async Task<IEnumerable<OrderResponseModel>> GetOrdersByUserName(string userName)
         {
-            var response = await _client.GetAsync($"/api/v1/Order/{userName}");
+            var response = await _client.GetAsync($"/Order/{userName}");
             return await response.ReadContentAs<List<OrderResponseModel>>();
         }
     }
